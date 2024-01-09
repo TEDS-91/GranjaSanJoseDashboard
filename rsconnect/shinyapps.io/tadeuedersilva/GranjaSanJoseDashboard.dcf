@@ -1,0 +1,12 @@
+name: GranjaSanJoseDashboard
+title: GranjaSanJoseDashboard
+username: tadeuedersilva
+account: tadeuedersilva
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10891447
+bundleId: 8125667
+url: https://tadeuedersilva.shinyapps.io/GranjaSanJoseDashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
