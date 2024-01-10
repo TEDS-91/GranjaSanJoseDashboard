@@ -12,5 +12,7 @@ utils::globalVariables(c("AverageConsumption",
                          "milk",
                          "speed",
                          "visits",
-                         "calves"
+                         "calves",
+                         "CalfAge",
+                         "Value"
 ))

@@ -7,6 +7,6 @@
 app_server <- function(input, output, session) {
   # Your application server logic
 
-  mod_raw_data_viz_server("raw-data")
+  mod_overall_data_viz_server("raw-data")
 
 }

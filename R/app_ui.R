@@ -18,7 +18,7 @@ app_ui <- function(request) {
       fluid = TRUE,
       fillable = FALSE,
       bslib::nav_panel(title = "Dashboard",
-                       mod_raw_data_viz_ui("raw-data")),
+                       mod_overall_data_viz_ui("raw-data")),
       bslib::nav_spacer()
     )
   )
