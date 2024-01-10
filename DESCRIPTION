@@ -18,7 +18,9 @@ Imports:
     golem (>= 0.4.1),
     htmltools,
     plotly,
+    rmarkdown,
     shiny (>= 1.8.0),
+    shinycustomloader,
     shinyWidgets,
     tidyr
 Encoding: UTF-8

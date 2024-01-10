@@ -1,0 +1,179 @@
+---
+title: "****Granja San Jose Report****"
+subtitle: "Report built upon the raw data."
+geometry: margin = 1.7cm
+output: pdf_document
+header-includes:
+  - \usepackage{color}
+  - \usepackage{sectsty}
+  - \usepackage{caption}
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{titling}
+params:
+  all_data: 'NULL'
+---
+
+## 1 - Overall Statistics.
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+params$all_data |>
+  dplyr::summarise(
+    "No. Calves" = dplyr::n_distinct(CalfNumber),
+    "Calf Age (days)" = mean(CalfAge, na.rm = TRUE),
+    "Milk Cons. (l)" = mean(AverageConsumption, na.rm = TRUE),
+    "Drink. Speed" = mean(AverageDrinkingSpeed, na.rm = TRUE),
+    "Vis. With Cons." = mean(VisitsWithConsum, na.rm = TRUE),
+    "Vis. With Credit Without Cons." = mean(VisitsWithCreditWithoutConsum, na.rm = TRUE),
+    "Vis. Without Credit" = mean(VisitsWithoutCredit, na.rm = TRUE)) |> 
+  dplyr::mutate(
+          dplyr::across(dplyr::where(is.numeric), round, 2)
+        ) |>
+  kableExtra::kbl(row.names = FALSE, align = "l") |>
+  kableExtra::column_spec(1, bold = TRUE) |>
+  kableExtra::row_spec(0, bold = TRUE, color = "white", background = "#007582") |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+## 2 - Overall Statistics Monthly. 
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+params$all_data |>
+  dplyr::mutate(
+    Month = lubridate::month(Day)
+  ) |>
+  dplyr::group_by(Month) |>
+  dplyr::summarise(
+    "No. Calves" = dplyr::n_distinct(CalfNumber),
+    "Calf Age (days)" = mean(CalfAge, na.rm = TRUE),
+    "Milk Cons. (l)" = mean(AverageConsumption, na.rm = TRUE),
+    "Drink. Speed" = mean(AverageDrinkingSpeed, na.rm = TRUE),
+    "Vis. With Cons." = mean(VisitsWithConsum, na.rm = TRUE),
+    "Vis. With Credit Without Cons." = mean(VisitsWithCreditWithoutConsum, na.rm = TRUE),
+    "Vis. Without Credit" = mean(VisitsWithoutCredit, na.rm = TRUE)) |> 
+  dplyr::mutate(
+    dplyr::across(dplyr::where(is.numeric), round, 2)) |>
+  kableExtra::kable("latex", booktabs = T, escape = F) |>  
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position")) |> 
+  kableExtra::row_spec(0, bold = T, color = "white", background = "#007582")
+
+```
+
+## 3 - Overall Statistics by Feeder. 
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+
+params$all_data |>
+  dplyr::group_by(FeederNumber) |>
+  dplyr::summarise(
+    "No. Calves" = dplyr::n_distinct(CalfNumber),
+    "Calf Age (days)" = mean(CalfAge, na.rm = TRUE),
+    "Milk Cons. (l)" = mean(AverageConsumption, na.rm = TRUE),
+    "Drink. Speed" = mean(AverageDrinkingSpeed, na.rm = TRUE),
+    "Vis. With Cons." = mean(VisitsWithConsum, na.rm = TRUE),
+    "Vis. With Credit Without Cons." = mean(VisitsWithCreditWithoutConsum, na.rm = TRUE),
+    "Vis. Without Credit" = mean(VisitsWithoutCredit, na.rm = TRUE)) |> 
+  dplyr::mutate(
+    dplyr::across(dplyr::where(is.numeric), round, 2)) |>
+  kableExtra::kbl(row.names = FALSE, align = "l") |>
+  kableExtra::column_spec(1, bold = TRUE) |>
+  kableExtra::row_spec(0, bold = TRUE, color = "white", background = "#007582") |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+## 4 - All Variables by Feeder Over Time.
+
+```{r, echo = FALSE, fig.width = 20, fig.height = 11, warning = FALSE, message = FALSE}
+
+params$all_data |> 
+  dplyr::select(-Iso, -LOM) |> 
+  dplyr::mutate(
+    Month = lubridate::month(Day)
+  ) |> 
+  dplyr::group_by(Day, FeederNumber) |> 
+  dplyr::summarise(
+    "No. obs." = dplyr::n(),
+    "Calf Age (days)" = mean(CalfAge, na.rm = TRUE),
+    "Milk Cons. (l)" = mean(AverageConsumption, na.rm = TRUE),
+    "Drink. Speed" = mean(AverageDrinkingSpeed, na.rm = TRUE),
+    "Vis. With Cons." = mean(VisitsWithConsum, na.rm = TRUE),
+    "Vis. With Credit Without Cons." = mean(VisitsWithCreditWithoutConsum, na.rm = TRUE),
+    "Vis. Without Credit" = mean(VisitsWithoutCredit, na.rm = TRUE)) |> 
+  dplyr::mutate(
+    dplyr::across(dplyr::where(is.numeric), round, 2)
+  ) |>
+  dplyr::ungroup() |>
+  tidyr::pivot_longer(cols = -c(Day, FeederNumber),
+                      names_to = "Variables",
+                      values_to = "Values") |> 
+  ggplot2::ggplot(ggplot2::aes(x = Day, y = Values, col = FeederNumber)) +
+  ggplot2::geom_line() +
+  ggplot2::geom_point() +
+    ggplot2::facet_wrap(paste("Feeder:", FeederNumber)~Variables, scales = "free_y") +
+  ggplot2::theme_bw() +
+  ggplot2::theme(legend.position = "none")
+
+```
+
+## 5 - All Variables by Feeder Over Calf Age.
+
+```{r, echo = FALSE, fig.width = 20, fig.height = 11, warning = FALSE, message = FALSE}
+
+params$all_data |> 
+  dplyr::select(-Iso, -LOM) |> 
+  dplyr::group_by(CalfAge, FeederNumber) |> 
+  dplyr::summarise(
+    "No. obs." = dplyr::n(),
+    "Milk Cons. (l)" = mean(AverageConsumption, na.rm = TRUE),
+    "Drink. Speed" = mean(AverageDrinkingSpeed, na.rm = TRUE),
+    "Vis. With Cons." = mean(VisitsWithConsum, na.rm = TRUE),
+    "Vis. With Credit Without Cons." = mean(VisitsWithCreditWithoutConsum, na.rm = TRUE),
+    "Vis. Without Credit" = mean(VisitsWithoutCredit, na.rm = TRUE)) |> 
+  dplyr::mutate(
+    dplyr::across(dplyr::where(is.numeric), round, 2)
+  ) |>
+  dplyr::ungroup() |>
+  tidyr::pivot_longer(cols = -c(CalfAge, FeederNumber),
+                      names_to = "Variables",
+                      values_to = "Values") |> 
+  ggplot2::ggplot(ggplot2::aes(x = CalfAge, y = Values, col = FeederNumber)) +
+  ggplot2::geom_line() +
+  ggplot2::geom_point() +
+    ggplot2::facet_wrap(paste("Feeder:", FeederNumber)~Variables, scales = "free_y") +
+  ggplot2::theme_bw() +
+  ggplot2::theme(legend.position = "none")
+
+```
+
+<hr />
+<p style = "text-align: center; color: #007582;"> All rights reserved - University of Vermont </p>
+<center>
+
+```{r, warning = FALSE, echo = FALSE}
+
+path_logo <- system.file("app/www", "costaslablogo.jpeg", package = "GranjaSanJoseDashboard")
+
+htmltools::img(
+   src = knitr::image_uri(path_logo),
+   style = "width:100px; height:85px;")
+   
+```
+</center>
+&nbsp;
+

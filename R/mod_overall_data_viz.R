@@ -20,7 +20,7 @@ mod_overall_data_viz_ui <- function(id){
           column(3,
                  dateRangeInput(ns("date"), "Date:", start = min(get_raw_data()$Day), end = max(get_raw_data()$Day))),
           column(3,
-                 actionButton(ns("inputs_back"), "Date Input back!"))
+                 actionButton(ns("inputs_back"), "Reset Date!"))
         )
       ),
       bslib::card_body(
@@ -80,8 +80,8 @@ mod_overall_data_viz_ui <- function(id){
         min_height = 350,
         bslib::layout_column_wrap(
           width = 1/2,
-          plotly::plotlyOutput(ns("plot")),
-          DT::dataTableOutput(ns("sum_table"))
+          shinycustomloader::withLoader(plotly::plotlyOutput(ns("plot")), type = "html", loader = "loader1"),
+          shinycustomloader::withLoader(DT::dataTableOutput(ns("sum_table")), type = "html", loader = "loader1")
         )
       )
     ),
@@ -102,8 +102,25 @@ mod_overall_data_viz_ui <- function(id){
       min_height = 450,
       bslib::layout_column_wrap(
         width = 1/2,
-        plotly::plotlyOutput(ns("calf_plot")),
-        DT::dataTableOutput(ns("calf_table"))
+        shinycustomloader::withLoader(plotly::plotlyOutput(ns("calf_plot")), type = "html", loader = "loader1"),
+        shinycustomloader::withLoader(DT::dataTableOutput(ns("calf_table")), type = "html", loader = "loader1")
+      )
+    ),
+
+    bslib::card(
+      bslib::card_header(
+        "Report with all Data Summarized."
+      ),
+      bslib::card_body(
+        fluidRow(
+          column(2,
+                 offset = 10,
+                 downloadButton(ns("downloadreport"), label = "Report.html!")),
+
+          # column(2,
+          #        offset = 8,
+          #        downloadButton(ns("downloadreport_pdf"), label = "Report.pdf!"))
+        )
       )
     )
   )
@@ -345,6 +362,78 @@ mod_overall_data_viz_server <- function(id){
         )
 
     })
+
+
+    # report generation
+
+    all_data_to_report <- get_raw_data()
+
+    output$downloadreport <-
+
+      downloadHandler(
+        "GranjaSanJoseReport.html",
+        content =
+          function(file)
+          {
+
+            withProgress(message = "Rendering the report...",
+                         detail = "This may take a few seconds...", value = 0.5, {
+
+              path_reportRMD <- system.file("app", "report.Rmd", package = "GranjaSanJoseDashboard")
+
+              path_reportHTML <- system.file("app", "built_report.html", package = "GranjaSanJoseDashboard")
+
+              rmarkdown::render(
+                input = path_reportRMD,
+                output_file = "built_report.html",
+
+                params = list(
+                  all_data = all_data_to_report
+                )
+              )
+
+              readBin(con = path_reportHTML,
+                      what = "raw",
+                      n = file.info(path_reportHTML)[ , "size"]) |>
+
+                writeBin(con = file)
+
+            })
+          }
+      )
+
+    # pdf - TO BE DONE
+
+    output$downloadreport_pdf <-
+      downloadHandler(
+        "GranjaSanJoseReport.pdf",
+        content =
+          function(file)
+          {
+            path_reportRMD <- system.file("app", "report_pdf.Rmd", package = "GranjaSanJoseDashboard")
+
+            path_reportPDF <- system.file("app", "built_report.pdf", package = "GranjaSanJoseDashboard")
+
+            rmarkdown::render(
+              input = path_reportRMD,
+              output_file = "built_report.pdf",
+
+              params = list(
+                all_data = all_data_to_report
+              )
+            )
+
+            readBin(con = path_reportPDF,
+                    what = "raw",
+                    n = file.info(path_reportPDF)[ , "size"]) |>
+
+              writeBin(con = file)
+          }
+      )
+
+
+
+
 
   })
 }

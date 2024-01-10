@@ -5,7 +5,7 @@ account: tadeuedersilva
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 10891447
-bundleId: 8125928
+bundleId: 8130897
 url: https://tadeuedersilva.shinyapps.io/GranjaSanJoseDashboard/
 version: 1
 asMultiple: FALSE
